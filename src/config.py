@@ -1,5 +1,6 @@
 from pydantic import BaseSettings
 import datetime as dt
+import pathlib
 
 
 class PostgresEnv(BaseSettings):
@@ -31,3 +32,8 @@ jwt_env = JWTEnv()
 JWT_AT_LIFETIME = dt.timedelta(minutes=5)
 JWT_RT_LIFETIME = dt.timedelta(days=7)
 JWT_AT_TYPE = 'bearer'
+
+STORAGE_FOLDER = 'storage'
+STORAGE_PATH = pathlib.Path('.').absolute().joinpath(STORAGE_FOLDER)
+RESEARCHES_FOLDER = 'researches'
+RESEARCHES_PATH = STORAGE_PATH.joinpath(RESEARCHES_FOLDER)

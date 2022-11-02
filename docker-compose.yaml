@@ -6,7 +6,7 @@ volumes:
 services:
   credit_assistance:
     restart: always
-    container_name: credit_assistance
+    container_name: leaders_hack
     build: .
     ports:
       - '80:80'
