@@ -1,4 +1,4 @@
-from src.exceptions import CustomHTTPException
+from src.utils.custom import CustomHTTPException
 
 
 WRONG_FILES_FORMAT = CustomHTTPException(415, 'wrong_files_format')

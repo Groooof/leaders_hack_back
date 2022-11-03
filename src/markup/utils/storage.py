@@ -56,6 +56,7 @@ class ArchiveLoader:
 
 class ResearchesStorage:
     _CAPTURES_FOLDER = 'captures'
+    _MARKUP_FILENAME = 'markup.json'
     
     def __init__(self, path: pathlib.Path) -> None:
         self._path = path
@@ -79,21 +80,31 @@ class ResearchesStorage:
             
         research_path = self._gen_path(foldername)
         research_path.mkdir(parents=True, exist_ok=True)
-        captures_path = research_path.joinpath('captures')
         
+        captures_path = research_path.joinpath(self._CAPTURES_FOLDER)
         captures_path.mkdir()
+        
+        markup_path = research_path.joinpath(self._MARKUP_FILENAME)
+        markup_path.touch()
         return foldername
     
     def remove_research(self, foldername: str) -> None:
         research_path = self._gen_path(foldername)
         shutil.rmtree(research_path, ignore_errors=True)
     
-    def get_capture_path(self, foldername: str, capture_num: int) -> tp.Optional[str]:
+    def get_capture_path(self, foldername: str, capture_num: int) -> tp.Optional[pathlib.Path]:
         research_path = self._gen_path(foldername)
-        captures_path = research_path.joinpath('captures')
+        captures_path = research_path.joinpath(self._CAPTURES_FOLDER)
         capture_path = captures_path.joinpath(f'{capture_num}.dcm')
         if capture_path.exists():
             return capture_path
+        return None
+    
+    def get_markup_path(self, foldername: str) -> tp.Optional[pathlib.Path]:
+        research_path = self._gen_path(foldername)
+        markup_path = research_path.joinpath(self._MARKUP_FILENAME)
+        if markup_path.exists():
+            return markup_path
         return None
     
     @staticmethod

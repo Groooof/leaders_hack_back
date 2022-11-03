@@ -47,7 +47,7 @@ class PasswordHasher:
         return pbkdf2_hmac(string, salt)
     
     
-class JWTToken:
+class BaseJWTToken:
     def __init__(self, token: tp.Optional[str] = None) -> None:
         self.header = {}
         self.payload = {}
@@ -87,3 +87,22 @@ class JWTToken:
         signature_b64 = _str.from_bytes(_b64.from_bytes(self.signature))
         return header_b64 + '.' + payload_b64 + '.' + signature_b64 
 
+
+class JWTToken(BaseJWTToken):
+    @property
+    def user(self) -> str:
+        return self.payload['sub']
+    
+    @property
+    def exp(self) -> int:
+        return self.payload['exp']
+    
+    @property
+    def role(self) -> str:
+        return self.payload['role']
+    
+    @property
+    def is_superuser(self) -> bool:
+        return self.payload['is_superuser']
+    
+    

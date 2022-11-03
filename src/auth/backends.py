@@ -48,7 +48,7 @@ def check_signature(jwt: utils.JWTToken = Depends(get_token)) -> utils.JWTToken:
 
 
 def check_expires(jwt: utils.JWTToken = Depends(get_token)) -> utils.JWTToken:
-    token_expires_timestamp = jwt.payload.get('exp')
+    token_expires_timestamp = jwt.exp
     token_expires_dt = _dt.from_timestamp(token_expires_timestamp)
     if dt.datetime.now() > token_expires_dt:
         raise exc.TOKEN_EXPIRED
@@ -56,13 +56,13 @@ def check_expires(jwt: utils.JWTToken = Depends(get_token)) -> utils.JWTToken:
 
 
 def check_role(role: str, jwt: utils.JWTToken = Depends(get_token)) -> utils.JWTToken:
-    if role != jwt.payload.get('role'):
+    if role != jwt.role:
         raise exc.ACCESS_DENIED(error_description=f'Only for {role}')
     return jwt
 
 
 def is_superuser(jwt: utils.JWTToken = Depends(get_token)) -> utils.JWTToken:
-    if not jwt.payload.get('is_superuser'):
+    if not jwt.is_superuser:
         raise exc.ACCESS_DENIED(error_description='Only for superuser')
     return jwt
 
