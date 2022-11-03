@@ -1,4 +1,4 @@
-FROM python:3.7
+FROM python:3.10.8
 WORKDIR /code
 COPY ./requirements /code/requirements
 RUN /usr/local/bin/python -m pip install --upgrade pip

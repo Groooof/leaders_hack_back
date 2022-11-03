@@ -8,7 +8,7 @@ from fastapi.security.http import (
 )
 
 from src.auth import dto    
-from src.auth import exceptions as exc
+from src import exceptions as exc
 from src.auth import utils
 from src.utils.converters import _dt
 from src import config

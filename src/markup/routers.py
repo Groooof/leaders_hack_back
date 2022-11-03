@@ -1,9 +1,9 @@
 import asyncpg
 import typing as tp
-import asyncpg
+from timeit import default_timer
 from fastapi import APIRouter, Depends, UploadFile
 from fastapi.responses import FileResponse
-import uuid 
+from fastapi.background import BackgroundTasks
 
 from src import config
 from src.auth import backends
@@ -12,9 +12,9 @@ from src.dependencies import get_db_connection
 from src.markup import crud
 from src.schemas import Error
 from src.markup.utils import ResearchesStorage
+from src.markup.crud import crud
 import src.markup.schemas as sch
 import src.exceptions as exc
-from src.markup.crud import crud
 
 
 router = APIRouter(prefix='/api/v1', tags=['markup'])
@@ -22,22 +22,21 @@ router.responses = {403: {'description': 'Access denied', 'model': Error},
                     401: {'description': 'Token expired', 'model': Error}}
 
 
-@router.post('/research', 
-             dependencies=[Depends(backends.check_signature),
-                           Depends(backends.is_moderator)])
-async def create_research(files: tp.List[UploadFile], 
-                          con: asyncpg.Connection = Depends(get_db_connection),
-                          jwt: JWTToken = Depends(backends.get_token)):
-
-    research_id = await crud.create_research(con, jwt.user)
+@router.post('/research',)
+             #dependencies=[Depends(backends.check_signature),])
+                           #Depends(backends.is_moderator)])
+async def create_research(background_tasks: BackgroundTasks,
+                          files: tp.List[UploadFile], 
+                          con: asyncpg.Connection = Depends(get_db_connection)):
+                          #jwt: JWTToken = Depends(backends.get_token)):
     
     storage = ResearchesStorage(config.RESEARCHES_PATH)
-    research_id = storage.create_empty_research(research_id)
-    loaded = storage.load_captures(research_id, files)
+    research_id = storage.create_empty_research()
+    loaded = await storage.load_captures(research_id, files)
+    
     if not loaded:
         storage.remove_research(research_id)
         raise exc.WRONG_FILES_FORMAT(error_description='you may load list of .dcm files or ONE archive with .dcm files')
-        
     return sch.CreateResearchResponse(research_id=research_id, captures_count=loaded)
 
 
@@ -68,11 +67,11 @@ async def get_markup(research_id: str,
     return FileResponse(path)
 
 
-@router.get('/get_admin', dependencies=[Depends(backends.jwt_auth),
-                                        Depends(backends.is_superuser)])
+@router.get('/get_admin')#, dependencies=[Depends(backends.jwt_auth),
+                          #              Depends(backends.is_superuser)])
 async def get_admin(con: asyncpg.Connection = Depends(get_db_connection)):
 
-    return await crud.get_admin(con)
+    return {'Hello': 1}
 
     
     

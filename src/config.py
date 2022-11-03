@@ -3,7 +3,13 @@ import datetime as dt
 import pathlib
 
 
-class PostgresEnv(BaseSettings):
+class BaseEnv(BaseSettings):
+    class Config:
+        env_file = '.env'
+        env_file_encoding = 'utf-8'
+
+
+class PostgresEnv(BaseEnv):
     """
     Переменные окружения.
     """
@@ -15,20 +21,27 @@ class PostgresEnv(BaseSettings):
 
     class Config:
         env_prefix = 'POSTGRES_'
-        env_file = '.env'
-        env_file_encoding = 'utf-8'
 
 
-class JWTEnv(BaseSettings):
-    JWT_SECRET: str
+class JWTEnv(BaseEnv):
+    SECRET: str
 
     class Config:
-        env_file = '.env'
-        env_file_encoding = 'utf-8'
+        env_prefix = 'JWT_'
     
+
+class CeleryEnv(BaseEnv):
+    BROKER_URL: str
+    RESULT_BACKEND: str
+    
+    class Config:
+        env_prefix = 'CELERY_'
+    
+
 
 postgres_env = PostgresEnv()
 jwt_env = JWTEnv()
+celery_env = CeleryEnv()
 JWT_AT_LIFETIME = dt.timedelta(minutes=5)
 JWT_RT_LIFETIME = dt.timedelta(days=7)
 JWT_AT_TYPE = 'bearer'
