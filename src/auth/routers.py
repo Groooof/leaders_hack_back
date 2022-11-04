@@ -15,11 +15,11 @@ from src import config
 router = APIRouter(prefix='/api/v1', tags=['auth'])
 
 
-@router.post('/user', 
-             response_class=Response, 
-             responses={409: {'description': 'User already exists', 'model': Error}})
-async def signup(body: sch.UserCredentials, con: asyncpg.Connection = Depends(get_db_connection)):  
-    await auth.create_user(con, body.login, body.password)
+# @router.post('/user', 
+#              response_class=Response, 
+#              responses={409: {'description': 'User already exists', 'model': Error}})
+# async def signup(body: sch.UserCredentials, con: asyncpg.Connection = Depends(get_db_connection)):  
+#     await auth.create_user(con, body.login, body.password)
 
 
 @router.post('/login', 
