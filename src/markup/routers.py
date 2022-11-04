@@ -1,9 +1,8 @@
 import asyncpg
 import typing as tp
-from timeit import default_timer
+from pprint import pprint
 from fastapi import APIRouter, Depends, UploadFile
 from fastapi.responses import FileResponse
-from fastapi.background import BackgroundTasks
 
 from src import config
 from src.auth import backends
@@ -22,16 +21,17 @@ router.responses = {403: {'description': 'Access denied', 'model': Error},
                     401: {'description': 'Token expired', 'model': Error}}
 
 
-@router.post('/research',)
-             #dependencies=[Depends(backends.check_signature),])
-                           #Depends(backends.is_moderator)])
-async def create_research(background_tasks: BackgroundTasks,
-                          files: tp.List[UploadFile], 
-                          con: asyncpg.Connection = Depends(get_db_connection)):
-                          #jwt: JWTToken = Depends(backends.get_token)):
+@router.post('/research',
+             dependencies=[Depends(backends.jwt_auth),
+                           Depends(backends.is_moderator)])
+async def create_research(files: tp.List[UploadFile], 
+                          con: asyncpg.Connection = Depends(get_db_connection),
+                          jwt: JWTToken = Depends(backends.get_token)):
+    
+    research_id = await crud.create_research(con, jwt.user)
     
     storage = ResearchesStorage(config.RESEARCHES_PATH)
-    research_id = storage.create_empty_research()
+    storage.create_empty_research(research_id)
     loaded = await storage.load_captures(research_id, files)
     
     if not loaded:
@@ -48,9 +48,7 @@ async def get_capture(research_id: str, capture_num: int):
         raise exc.FILE_NOT_FOUND(error_description='research or capture was not found')
     return FileResponse(path)
 
-
-@router.get('/research/{research_id}/markup',
-            dependencies=[Depends(backends.check_signature)])
+@router.get('/research/{research_id}/markup', dependencies=[Depends(backends.jwt_auth)])
 async def get_markup(research_id: str, 
                      con: asyncpg.Connection = Depends(get_db_connection),
                      jwt: JWTToken = Depends(backends.get_token)):
@@ -61,17 +59,29 @@ async def get_markup(research_id: str,
         raise exc.FILE_NOT_FOUND(error_description='research was not found')
     
     have_access = await crud.have_access_to_markup(con, jwt.user, research_id)
+
     if not have_access:
         raise exc.ACCESS_DENIED(error_description='you have not acces to this markup (only creator and markers)')
 
     return FileResponse(path)
 
 
-@router.get('/get_admin')#, dependencies=[Depends(backends.jwt_auth),
-                          #              Depends(backends.is_superuser)])
-async def get_admin(con: asyncpg.Connection = Depends(get_db_connection)):
+@router.post('/research/{research_id}/markup', dependencies=[Depends(backends.jwt_auth)])
+async def upload_markup(research_id: str, 
+                        file: UploadFile,
+                        con: asyncpg.Connection = Depends(get_db_connection),
+                        jwt: JWTToken = Depends(backends.get_token)):
 
-    return {'Hello': 1}
+    have_access = await crud.have_access_to_markup(con, jwt.user, research_id)
+    pprint(have_access)
+    if not have_access:
+        raise exc.ACCESS_DENIED(error_description='you have not acces to modify this markup (only creator and markers)')
+    
+    storage = ResearchesStorage(config.RESEARCHES_PATH)
+    loaded = await storage.load_markup(research_id,  file)
+
+    if not loaded:
+        raise exc.WRONG_FILES_FORMAT(error_description='.json expected')
 
     
     

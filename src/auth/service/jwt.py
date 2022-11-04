@@ -26,7 +26,7 @@ def generate_jwt_access(user_id: str, role: str, is_superuser: bool) -> str:
     jwt.payload['role'] = role
     jwt.payload['is_superuser'] = is_superuser
     jwt.payload['exp'] = _dt.to_timestamp(dt.datetime.now() + config.JWT_AT_LIFETIME)
-    jwt.sign(config.jwt_env.JWT_SECRET)
+    jwt.sign(config.jwt_env.SECRET)
     return str(jwt)
 
 

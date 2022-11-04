@@ -17,16 +17,13 @@ from .utils import (
 )
 
 
-# class MarkupLoader:
-#     def __init__(self, file: UploadFile) -> None:
-#         self._file = file
+class MarkupLoader:
+    def __init__(self, file: UploadFile) -> None:
+        self._file = file
         
-#     def load(self, path: pathlib.Path):
-#         with open(path.joinpath(f'{i+1}.dcm'), 'xb') as f:
-#             f.write(self._file.file.read())
-    
-#     def validate(self) -> bool:
-#         return ExtensionsValidators.is_json(self._file.filename)
+    async def load(self, path: pathlib.Path):
+        async with aiofiles.open(path, 'wb') as f:
+            await f.write(self._file.file.read())
 
 
 class AsyncDicomListLoader:
@@ -68,6 +65,7 @@ class AsyncArchiveLoader:
             
         return count
 
+
 class ResearchesStorage:
     _CAPTURES_FOLDER = 'captures'
     _MARKUP_FILENAME = 'markup.json'
@@ -84,9 +82,13 @@ class ResearchesStorage:
         path = self._gen_path(foldername).joinpath(self._CAPTURES_FOLDER)
         return await loader.load(path)  
 
-    def load_markup(self, foldername: str, file: UploadFile):
-        # FileLoader.load(...)
-        pass
+    async def load_markup(self, foldername: str, file: UploadFile):
+        if not ExtensionsValidators.is_json:
+            return 0
+        path = self._gen_path(foldername).joinpath(self._MARKUP_FILENAME)
+        loader = MarkupLoader(file)
+        await loader.load(path)
+        return 1
 
     def create_empty_research(self, foldername: tp.Optional[str] = None):
         if foldername is None:

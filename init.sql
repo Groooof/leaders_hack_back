@@ -27,7 +27,8 @@ CREATE TABLE researches (
     FOREIGN KEY (creator_id) REFERENCES users (id)
 );
 
-CREATE TABLE researches__markers (
+CREATE TABLE researches_markers (
+    id SERIAL PRIMARY KEY,
     research_id UUID NOT NULL,
     marker_id INT NOT NULL,
     FOREIGN KEY (research_id) REFERENCES researches (id),

@@ -14,7 +14,10 @@ async def create_research(con: asyncpg.Connection, creator_id: int) -> str:
 async def have_access_to_markup(con: asyncpg.Connection, user_id: int, research_id: tp.Union[str, uuid.UUID]) -> bool:
     query = '''
     SELECT EXISTS (
-        SELECT 1 FROM researches r, researches__markers r_m
+        SELECT 1 FROM researches r
+        LEFT JOIN researches_markers r_m
+        ON
+        r.id = r_m.research_id 
         WHERE 
         (r.id = $2 AND r.creator_id = $1)
         OR 

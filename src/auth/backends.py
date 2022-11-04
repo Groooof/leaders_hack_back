@@ -42,7 +42,7 @@ def get_token(token = Depends(CustomHTTPBearer())) -> utils.JWTToken:
     
     
 def check_signature(jwt: utils.JWTToken = Depends(get_token)) -> utils.JWTToken:
-    if not jwt.verify(config.jwt_env.JWT_SECRET):
+    if not jwt.verify(config.jwt_env.SECRET):
         raise exc.INVALID_TOKEN
     return jwt
 
