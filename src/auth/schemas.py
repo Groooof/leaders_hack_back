@@ -13,6 +13,7 @@ class JWTTokensResponse(pd.BaseModel):
     token_type: str = config.JWT_AT_TYPE
     expires_in: int
     refresh_token: uuid.UUID
+    role: str
     
     
 class RefreshTokenRequest(pd.BaseModel):
