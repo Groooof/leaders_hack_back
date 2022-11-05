@@ -68,7 +68,7 @@ async def upload_markup(research_id: str,
                         jwt: JWTToken = Depends(backends.get_token)):
 
     await service.check_access_to_research(con, jwt.user, research_id)
-    service.upload_markup(research_id, file)
+    await service.upload_markup(research_id, file)
     
     
 @router.get('/research/markers', dependencies=[Depends(backends.jwt_auth),

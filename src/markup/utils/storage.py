@@ -31,12 +31,16 @@ class ResearchLoadersMixin:
         return loaded     
 
     async def load_markup(self, foldername: str, file: UploadFile) -> tp.Optional[int]:
+        print(1)
         if not self.is_exists(foldername) or not ExtensionsValidators.is_json:
             return None
+        print(2)
 
         path = self.get_path_to_folder(foldername).joinpath(self._MARKUP_FILENAME)
         loader = MarkupLoader(file)
+        print(3)
         await loader.load(path)
+        print(4)
         return 1
 
 
@@ -45,11 +49,18 @@ class ResearchPathManagerMixin:
         if not self.is_exists(foldername):
             return None
         
-        research_path = self.get_path_to_folder(foldername)
-        captures_path = research_path.joinpath(self._CAPTURES_FOLDER)
+        captures_path = self.get_captures_path(foldername)
         capture_path = captures_path.joinpath(f'{capture_num}.dcm')
         return capture_path
     
+    def get_captures_path(self, foldername: str) -> tp.Optional[pathlib.Path]:
+        if not self.is_exists(foldername):
+            return None
+        
+        research_path = self.get_path_to_folder(foldername)
+        captures_path = research_path.joinpath(self._CAPTURES_FOLDER)
+        return captures_path
+
     def get_preview_path(self, foldername: str) -> tp.Optional[pathlib.Path]:
         if not self.is_exists(foldername):
             return None
@@ -81,13 +92,13 @@ class ResearchesStorage(FileStorage, ResearchLoadersMixin, ResearchPathManagerMi
         research_path = self.get_path_to_folder(foldername)
         research_path.mkdir(parents=True, exist_ok=True)
         
-        captures_path = research_path.joinpath(self._CAPTURES_FOLDER)
+        captures_path = self.get_captures_path(foldername)
         captures_path.mkdir()
         
-        markup_path = research_path.joinpath(self._MARKUP_FILENAME)
+        markup_path = self.get_preview_path(foldername)
         markup_path.touch()
         
-        preview_path = research_path.joinpath(self._PREVIEW_FILENAME)
+        preview_path = self.get_preview_path(foldername)
         preview_path.touch()
         return foldername
     

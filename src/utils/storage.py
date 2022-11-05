@@ -1,6 +1,7 @@
 import typing as tp
 import pathlib
 import shutil
+from functools import lru_cache
 from .crypto import generate_uuid
 
 
@@ -22,6 +23,7 @@ class FileStorage:
         research_path = self.get_path_to_folder(foldername)
         shutil.rmtree(research_path, ignore_errors=True)
     
+    @lru_cache(maxsize=256)
     def get_path_to_folder(self, foldername) -> tp.Optional[pathlib.Path]:
         return pathlib.Path(self._root).joinpath(foldername[:2], foldername)
 

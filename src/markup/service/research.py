@@ -61,7 +61,7 @@ async def check_access_to_research(con: asyncpg.Connection, user_id: int, resear
 
 async def upload_markup(research_id: str, file: UploadFile):
     storage = utils.ResearchesStorage(config.RESEARCHES_PATH)
-    loaded = await storage.load_markup(research_id,  file)
+    loaded = await storage.load_markup(research_id, file)
     if not loaded:
         raise exc.WRONG_FILES_FORMAT(error_description='.json expected')
     
