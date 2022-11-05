@@ -55,21 +55,15 @@ async def upload_markup(research_id: str, file: UploadFile):
     loaded = await storage.load_markup(research_id,  file)
     if not loaded:
         raise exc.WRONG_FILES_FORMAT(error_description='.json expected')
-
-
-async def get_search_filters(con: asyncpg.Connection, user_role: str) -> sch.GetFiltersResponse:
-    response = sch.GetFiltersResponse()
-    tags = await crud.get_tags(con)
-    tags_filter = sch.TagFilter(values=tags)
-    response.filters.append(tags_filter)
     
-    if user_role == 'moderator':
-        markers = await crud.get_markers(con)
-        markers_filter = sch.MarkerFilter(values=markers)
-        response.filters.append(markers_filter)
-        
-    return response
 
+async def get_markers(con: asyncpg.Connection) -> tp.List[sch.Marker]:
+    return await crud.get_markers(con)
+
+
+async def get_tags(con: asyncpg.Connection) -> tp.List[str]:
+    return await crud.get_tags(con)
+    
 
 async def add_tags(con: asyncpg.Connection, tags: tp.List[str]) -> None:
     await crud.add_tags(con, tags)
@@ -86,25 +80,15 @@ async def search(con: asyncpg.Connection, query: tp.Optional[str], filters: sch.
 
     response = sch.SearchResponse()
     for row in search_result:
-        # for item in row.items():
-            research_id = str(row['research_id'])
-            research_name = row['research_name']
-            research_description = row['research_description']
-            research_status = row['research_status']
-            research_tags = row['research_tags']
-            marker_id = row['marker_id']
-            marker_name = row['marker_name']
-            marker_surname = row['marker_surname']
-            marker_patronymic = row['marker_patronymic']
-            marker = sch.Marker(id=marker_id,
-                                name=marker_name,
-                                surname=marker_surname,
-                                patronymic=marker_patronymic) if marker_id is not None else None
-            research = sch.Research(id=research_id,
-                                    name=research_name,
-                                    description=research_description,
-                                    status=research_status,
-                                    tags=research_tags,
-                                    marker=marker)
-            response.researches.append(research)
+        marker = sch.Marker(id=row['marker_id'],
+                            name=row['marker_name'],
+                            surname=row['marker_surname'],
+                            patronymic=row['marker_patronymic']) if row['marker_id'] is not None else None
+        research = sch.Research(id=str(row['research_id']),
+                                name=row['research_name'],
+                                description=row['research_description'],
+                                status=row['research_status'],
+                                tags=row['research_tags'],
+                                marker=marker)
+        response.researches.append(research)
     return response

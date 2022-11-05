@@ -5,10 +5,6 @@ import typing as tp
 from enum import Enum
 
 
-class CreateResearchResponse(pd.BaseModel):
-    research_id: str
-    captures_count: int
-    
     
 class ResearchStatus(str, Enum):
     new = 'Новое'
@@ -22,10 +18,6 @@ class Filters(str, Enum):
     markers = 'markers'
     
     
-class Tag(pd.BaseModel):
-    name: str
-    
-    
 class Marker(pd.BaseModel):
     id: int
     name: str
@@ -33,41 +25,9 @@ class Marker(pd.BaseModel):
     patronymic: tp.Optional[str]
     
     
-class Filter(pd.BaseModel):
-    name: Filters
-    values: tp.List[tp.Any]
-    
-    
-class TagFilter(Filter):
-    name: Filters = Filters.tags
-    values: tp.List[Tag]
-    
-
-class MarkerFilter(Filter):
-    name: Filters = Filters.markers
-    values: tp.List[Marker]
-    
-    
-class GetFiltersResponse(pd.BaseModel):
-    filters: tp.List[tp.Union[TagFilter, MarkerFilter]] = pd.Field(default_factory=list)
-
-    
-class AddTagsRequest(pd.BaseModel):
-    tags: tp.List[str]
-    
-    
-class ChangeResearchStatusRequest(pd.BaseModel):
-    status: ResearchStatus
-    
-    
 class SearchFilters(pd.BaseModel):
     tags: tp.Optional[tp.List[str]] = None
     marker: tp.Optional[int] = None
-    
-    
-class SearchRequest(pd.BaseModel):
-    query: tp.Optional[str]
-    filters: tp.Optional[SearchFilters] = None
     
 
 class Research(pd.BaseModel):
@@ -77,10 +37,39 @@ class Research(pd.BaseModel):
     tags: tp.List[str]
     status: ResearchStatus
     marker: tp.Optional[Marker]
+
+    
+class FilterData(pd.BaseModel):
+    name: str
+    get_values: str    
+    
+    
+# Responses ------------------------------------------------------------------------
+
+class CreateResearchResponse(pd.BaseModel):
+    research_id: str
+    captures_count: int
+    
+
+class GetFiltersResponse(pd.BaseModel):
+    filters: tp.List[FilterData]
     
     
 class SearchResponse(pd.BaseModel):
     researches: tp.List[Research] = pd.Field(default_factory=list)
     
     
+# Requests -------------------------------------------------------------------------    
+
+
+class ChangeResearchStatusRequest(pd.BaseModel):
+    status: ResearchStatus
     
+    
+class SearchRequest(pd.BaseModel):
+    query: tp.Optional[str]
+    filters: tp.Optional[SearchFilters] = None
+    
+
+class AddTagsRequest(pd.BaseModel):
+    tags: tp.List[str]
