@@ -38,13 +38,13 @@ async def create_research(files: tp.List[UploadFile],
     return sch.CreateResearchResponse(research_id=research_id, captures_count=loaded)
 
 
-@router.get('/research/{research_id}/preview')
+@router.get('/research/{research_id}/preview', dependencies=[Depends(backends.jwt_auth)])
 async def get_preview(research_id: str):
     path = service.get_path_to_preview(research_id)
     return FileResponse(path)
 
 
-@router.get('/research/{research_id}/captures/{capture_num}')
+@router.get('/research/{research_id}/captures/{capture_num}', dependencies=[Depends(backends.jwt_auth)])
 async def get_capture(research_id: str, capture_num: int):
     
     path = service.get_path_to_capture(research_id, capture_num)
