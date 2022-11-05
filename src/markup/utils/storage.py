@@ -1,10 +1,14 @@
 import typing as tp
 import pathlib
+import asyncio
 import os   
 
 from fastapi import UploadFile
 
-from src.utils.dicom import dicom_to_image
+from src.utils.dicom import (
+    dicom_to_image,
+    remove_patient_personal_data
+)
 from src.utils.storage import FileStorage
 from .utils import ExtensionsValidators
 from .ct_loaders import (
@@ -31,16 +35,12 @@ class ResearchLoadersMixin:
         return loaded     
 
     async def load_markup(self, foldername: str, file: UploadFile) -> tp.Optional[int]:
-        print(1)
         if not self.is_exists(foldername) or not ExtensionsValidators.is_json:
             return None
-        print(2)
 
         path = self.get_path_to_folder(foldername).joinpath(self._MARKUP_FILENAME)
         loader = MarkupLoader(file)
-        print(3)
         await loader.load(path)
-        print(4)
         return 1
 
 
@@ -67,8 +67,6 @@ class ResearchPathManagerMixin:
         
         research_path = self.get_path_to_folder(foldername)
         preview_path = research_path.joinpath(self._PREVIEW_FILENAME)
-        if not preview_path.exists():
-            self.generate_preview(foldername)
         return preview_path
         
     def get_markup_path(self, foldername: str) -> tp.Optional[pathlib.Path]:
@@ -95,7 +93,7 @@ class ResearchesStorage(FileStorage, ResearchLoadersMixin, ResearchPathManagerMi
         captures_path = self.get_captures_path(foldername)
         captures_path.mkdir()
         
-        markup_path = self.get_preview_path(foldername)
+        markup_path = self.get_markup_path(foldername)
         markup_path.touch()
         
         preview_path = self.get_preview_path(foldername)
@@ -114,8 +112,21 @@ class ResearchesStorage(FileStorage, ResearchLoadersMixin, ResearchPathManagerMi
         
         captures_count = self.get_captures_count(foldername)
         capture_num = captures_count // 2
+        if capture_num == 0:
+            return None
         capture_path = self.get_capture_path(foldername, capture_num)
         return dicom_to_image(capture_path, path.joinpath(self._PREVIEW_FILENAME))
+        
+    async def depersonalize(self, foldername: str) -> None:
+        if not self.is_exists(foldername):
+            return None
+        
+        captures_count = self.get_captures_count(foldername)
+        for i in range(1, captures_count+1):
+            capture_path = self.get_capture_path(foldername, i)
+            remove_patient_personal_data(capture_path)
+            await asyncio.sleep(0)
+    
         
     def get_captures_count(self, foldername: str) -> int:
         if not self.is_exists(foldername):

@@ -26,6 +26,7 @@ async def load_captures(research_id: str, files: tp.List[UploadFile]) -> int:
         storage.remove_research(research_id)
         raise exc.WRONG_FILES_FORMAT(error_description='you may load list of .dcm files or ONE archive with .dcm files')
     storage.generate_preview(research_id)
+    await storage.depersonalize(research_id)
     return loaded
 
 
