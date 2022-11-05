@@ -38,15 +38,21 @@ async def create_research(files: tp.List[UploadFile],
     return sch.CreateResearchResponse(research_id=research_id, captures_count=loaded)
 
 
+@router.get('/research/{research_id}/preview')
+async def get_preview(research_id: str):
+    path = service.get_path_to_preview(research_id)
+    return FileResponse(path)
+
+
 @router.get('/research/{research_id}/captures/{capture_num}')
-async def get_capture(research_id: uuid.UUID, capture_num: int):
+async def get_capture(research_id: str, capture_num: int):
     
     path = service.get_path_to_capture(research_id, capture_num)
     return FileResponse(path)
 
 
 @router.get('/research/{research_id}/markup', dependencies=[Depends(backends.jwt_auth)])
-async def get_markup(research_id: uuid.UUID, 
+async def get_markup(research_id: str, 
                      con: asyncpg.Connection = Depends(get_db_connection),
                      jwt: JWTToken = Depends(backends.get_token)):
     
@@ -56,7 +62,7 @@ async def get_markup(research_id: uuid.UUID,
 
 
 @router.post('/research/{research_id}/markup', dependencies=[Depends(backends.jwt_auth)])
-async def upload_markup(research_id: uuid.UUID, 
+async def upload_markup(research_id: str, 
                         file: UploadFile,
                         con: asyncpg.Connection = Depends(get_db_connection),
                         jwt: JWTToken = Depends(backends.get_token)):
@@ -83,7 +89,7 @@ async def add_tags(body: sch.AddTagsRequest, con: asyncpg.Connection = Depends(g
 
 
 @router.post('research/{research_id}/status', dependencies=[Depends(backends.jwt_auth)])
-async def change_research_status(research_id: uuid.UUID,
+async def change_research_status(research_id: str,
                            body: sch.ChangeResearchStatusRequest,
                            con: asyncpg.Connection = Depends(get_db_connection),
                            jwt: JWTToken = Depends(backends.get_token)):

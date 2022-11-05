@@ -25,6 +25,7 @@ async def load_captures(research_id: str, files: tp.List[UploadFile]) -> int:
     if loaded is None:
         storage.remove_research(research_id)
         raise exc.WRONG_FILES_FORMAT(error_description='you may load list of .dcm files or ONE archive with .dcm files')
+    storage.generate_preview(research_id)
     return loaded
 
 
@@ -39,6 +40,14 @@ def get_path_to_capture(research_id: str, capture_num: int) -> tp.Union[str, pat
 def get_path_to_markup(research_id: str) -> tp.Union[str, pathlib.Path]:
     storage = utils.ResearchesStorage(config.RESEARCHES_PATH)
     path = storage.get_markup_path(research_id)
+    if path is None:
+        raise exc.FILE_NOT_FOUND(error_description='research was not found')
+    return path
+
+
+def get_path_to_preview(research_id: str) -> tp.Union[str, pathlib.Path]:
+    storage = utils.ResearchesStorage(config.RESEARCHES_PATH)
+    path = storage.get_preview_path(research_id)
     if path is None:
         raise exc.FILE_NOT_FOUND(error_description='research was not found')
     return path

@@ -1,5 +1,6 @@
 from fastapi import UploadFile
 import typing as tp
+from random import randint
 import pathlib
 import io
 import shutil
@@ -9,13 +10,14 @@ import aiofiles
 from concurrent.futures import ProcessPoolExecutor
 import asyncio
 
+import matplotlib.pyplot as plt
+import pydicom
 from src.utils.tempfile import tempfile_context
 from src.utils.crypto import generate_uuid
 from .utils import (
     ExtensionsValidators,
     CustomZipFile
 )
-
 
 class MarkupLoader:
     def __init__(self, file: UploadFile) -> None:
@@ -66,15 +68,39 @@ class AsyncArchiveLoader:
         return count
 
 
+def dicom_to_image(path_to_dicom, path_to_save):
+    ds = pydicom.dcmread(path_to_dicom)
+    plt.imsave(path_to_save, ds.pixel_array, cmap=plt.bone())
+    return path_to_save
+
+
 class ResearchesStorage:
     _CAPTURES_FOLDER = 'captures'
     _MARKUP_FILENAME = 'markup.json'
+    _PREVIEW_FILENAME = 'preview.jpg'
     
     def __init__(self, path: pathlib.Path) -> None:
         self._path = path
     
+    def generate_preview(self, foldername: str) -> tp.Optional[pathlib.Path]:
+        if not self.is_exists(foldername):
+            return None
+        
+        path = self._gen_path(foldername)
+        
+        captures_count = self.get_captures_count(foldername)
+        capture_num = captures_count // 2
+        capture_path = self.get_capture_path(foldername, capture_num)
+        return dicom_to_image(capture_path, path.joinpath(self._PREVIEW_FILENAME))
+        
+    def get_captures_count(self, foldername: str) -> int:
+        if not self.is_exists(foldername):
+            return None
+        
+        path = self._gen_path(foldername)
+        return len(os.listdir(path.joinpath(self._CAPTURES_FOLDER)))
+    
     async def load_captures(self, foldername: str, files: tp.List[UploadFile]) -> tp.Optional[int]:
-        print(self.is_exists(foldername))
         if not self.is_exists(foldername):
             return None
         
@@ -118,6 +144,15 @@ class ResearchesStorage:
         
         research_path = self._gen_path(foldername)
         shutil.rmtree(research_path, ignore_errors=True)
+    
+    def get_preview_path(self, foldername: str) -> tp.Optional[pathlib.Path]:
+        if not self.is_exists(foldername):
+            return None
+        
+        research_path = self._gen_path(foldername)
+        preview_path = research_path.joinpath(self._PREVIEW_FILENAME)
+        return preview_path
+        
     
     def get_capture_path(self, foldername: str, capture_num: int) -> tp.Optional[pathlib.Path]:
         if not self.is_exists(foldername):
