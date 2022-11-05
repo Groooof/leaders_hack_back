@@ -73,24 +73,32 @@ class ResearchesStorage:
     def __init__(self, path: pathlib.Path) -> None:
         self._path = path
     
-    async def load_captures(self, foldername: str, files: tp.List[UploadFile]) -> int:
+    async def load_captures(self, foldername: str, files: tp.List[UploadFile]) -> tp.Optional[int]:
+        print(self.is_exists(foldername))
+        if not self.is_exists(foldername):
+            return None
+        
         if len(files) == 1 and ExtensionsValidators.is_archive(files[0].filename):
             loader = AsyncArchiveLoader(files[0])
         else:
             loader = AsyncDicomListLoader(files)
         
         path = self._gen_path(foldername).joinpath(self._CAPTURES_FOLDER)
-        return await loader.load(path)  
+        loaded = await loader.load(path)
+        if not loaded:
+            return None
+        return loaded  
 
-    async def load_markup(self, foldername: str, file: UploadFile):
-        if not ExtensionsValidators.is_json:
-            return 0
+    async def load_markup(self, foldername: str, file: UploadFile) -> tp.Optional[int]:
+        if not self.is_exists(foldername) or not ExtensionsValidators.is_json:
+            return None
+
         path = self._gen_path(foldername).joinpath(self._MARKUP_FILENAME)
         loader = MarkupLoader(file)
         await loader.load(path)
         return 1
 
-    def create_empty_research(self, foldername: tp.Optional[str] = None):
+    def create_empty_research(self, foldername: tp.Optional[str] = None) -> tp.Optional[str]:
         if foldername is None:
             foldername = self._gen_foldername()
             
@@ -105,23 +113,34 @@ class ResearchesStorage:
         return foldername
     
     def remove_research(self, foldername: str) -> None:
+        if not self.is_exists(foldername):
+            return None
+        
         research_path = self._gen_path(foldername)
         shutil.rmtree(research_path, ignore_errors=True)
     
     def get_capture_path(self, foldername: str, capture_num: int) -> tp.Optional[pathlib.Path]:
+        if not self.is_exists(foldername):
+            return None
+        
         research_path = self._gen_path(foldername)
         captures_path = research_path.joinpath(self._CAPTURES_FOLDER)
         capture_path = captures_path.joinpath(f'{capture_num}.dcm')
-        if capture_path.exists():
-            return capture_path
-        return None
+        return capture_path
     
     def get_markup_path(self, foldername: str) -> tp.Optional[pathlib.Path]:
+        if not self.is_exists(foldername):
+            return None
+        
         research_path = self._gen_path(foldername)
         markup_path = research_path.joinpath(self._MARKUP_FILENAME)
-        if markup_path.exists():
-            return markup_path
-        return None
+        return markup_path
+    
+    def is_exists(self, foldername: str) -> bool:
+        research_path = self._gen_path(foldername)
+        if research_path.exists():
+            return True
+        return False
     
     @staticmethod
     def _gen_foldername() -> str:

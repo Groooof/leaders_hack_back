@@ -1,17 +1,18 @@
-import asyncpg
-import typing as tp
 from pprint import pprint
-from fastapi import APIRouter, Depends, UploadFile
+import typing as tp
+import uuid
+import asyncpg
+from fastapi import APIRouter, Depends, UploadFile, Form
 from fastapi.responses import FileResponse
 
 from src import config
 from src.auth import backends
 from src.auth.utils import JWTToken
 from src.dependencies import get_db_connection
-from src.markup import crud
 from src.schemas import Error
 from src.markup.utils import ResearchesStorage
 from src.markup.crud import crud
+from src.markup import service
 import src.markup.schemas as sch
 import src.exceptions as exc
 
@@ -24,66 +25,89 @@ router.responses = {403: {'description': 'Access denied', 'model': Error},
 @router.post('/research',
              dependencies=[Depends(backends.jwt_auth),
                            Depends(backends.is_moderator)])
-async def create_research(files: tp.List[UploadFile], 
+async def create_research(files: tp.List[UploadFile],
+                          name: str = Form(),
+                          description: str = Form(),
+                          tags: tp.List[str] = Form(default=None), 
                           con: asyncpg.Connection = Depends(get_db_connection),
                           jwt: JWTToken = Depends(backends.get_token)):
     
-    research_id = await crud.create_research(con, jwt.user)
-    
-    storage = ResearchesStorage(config.RESEARCHES_PATH)
-    storage.create_empty_research(research_id)
-    loaded = await storage.load_captures(research_id, files)
-    
-    if not loaded:
-        storage.remove_research(research_id)
-        raise exc.WRONG_FILES_FORMAT(error_description='you may load list of .dcm files or ONE archive with .dcm files')
+    tags = ''.join(tags).split(',') if tags is not None else []
+    research_id = await service.create_research(con, jwt.user, name, description, tags)
+    loaded = await service.load_captures(research_id, files)
     return sch.CreateResearchResponse(research_id=research_id, captures_count=loaded)
 
 
 @router.get('/research/{research_id}/captures/{capture_num}')
-async def get_capture(research_id: str, capture_num: int):
-    storage = ResearchesStorage(config.RESEARCHES_PATH)
-    path = storage.get_capture_path(research_id, capture_num)
-    if path is None:
-        raise exc.FILE_NOT_FOUND(error_description='research or capture was not found')
+async def get_capture(research_id: uuid.UUID, capture_num: int):
+    
+    path = service.get_path_to_capture(research_id, capture_num)
     return FileResponse(path)
 
+
 @router.get('/research/{research_id}/markup', dependencies=[Depends(backends.jwt_auth)])
-async def get_markup(research_id: str, 
+async def get_markup(research_id: uuid.UUID, 
                      con: asyncpg.Connection = Depends(get_db_connection),
                      jwt: JWTToken = Depends(backends.get_token)):
     
-    storage = ResearchesStorage(config.RESEARCHES_PATH)
-    path = storage.get_markup_path(research_id)
-    if path is None:
-        raise exc.FILE_NOT_FOUND(error_description='research was not found')
-    
-    have_access = await crud.have_access_to_markup(con, jwt.user, research_id)
-
-    if not have_access:
-        raise exc.ACCESS_DENIED(error_description='you have not acces to this markup (only creator and markers)')
-
+    path = service.get_path_to_markup(research_id)
+    await service.check_access_to_research(con, jwt.user, research_id)
     return FileResponse(path)
 
 
 @router.post('/research/{research_id}/markup', dependencies=[Depends(backends.jwt_auth)])
-async def upload_markup(research_id: str, 
+async def upload_markup(research_id: uuid.UUID, 
                         file: UploadFile,
                         con: asyncpg.Connection = Depends(get_db_connection),
                         jwt: JWTToken = Depends(backends.get_token)):
 
-    have_access = await crud.have_access_to_markup(con, jwt.user, research_id)
-    pprint(have_access)
-    if not have_access:
-        raise exc.ACCESS_DENIED(error_description='you have not acces to modify this markup (only creator and markers)')
+    await service.check_access_to_research(con, jwt.user, research_id)
+    service.upload_markup(research_id, file)
     
-    storage = ResearchesStorage(config.RESEARCHES_PATH)
-    loaded = await storage.load_markup(research_id,  file)
-
-    if not loaded:
-        raise exc.WRONG_FILES_FORMAT(error_description='.json expected')
-
     
+@router.get('/research/search/filters', 
+            response_model=sch.GetFiltersResponse, 
+            dependencies=[Depends(backends.jwt_auth)])
+async def get_search_filters(con: asyncpg.Connection = Depends(get_db_connection),
+                             jwt: JWTToken = Depends(backends.get_token)):
+    
+    return await service.get_search_filters(con, jwt.role)
+
+
+@router.post('/research/search/tags', dependencies=[Depends(backends.jwt_auth),
+                                                    Depends(backends.is_moderator)])
+async def add_tags(body: sch.AddTagsRequest, con: asyncpg.Connection = Depends(get_db_connection)):
+    await service.add_tags(con, body.tags)
+
+
+@router.post('research/{research_id}/status', dependencies=[Depends(backends.jwt_auth)])
+async def change_research_status(research_id: uuid.UUID,
+                           body: sch.ChangeResearchStatusRequest,
+                           con: asyncpg.Connection = Depends(get_db_connection),
+                           jwt: JWTToken = Depends(backends.get_token)):
+    
+    await service.check_access_to_research(con, jwt.user, research_id)
+    await service.change_research_status(con, research_id, body.status)
+
+
+@router.post('research/search', dependencies=[Depends(backends.jwt_auth)])
+async def search(body: tp.Optional[sch.SearchRequest] = None, 
+                 con: asyncpg.Connection = Depends(get_db_connection),
+                 jwt: JWTToken = Depends(backends.get_token)):
+        
+    query = body.query if body is not None else None
+    filters = body.filters if body is not None else None
+    if jwt.role == 'marker':
+        filters = sch.SearchFilters(marker=jwt.user)
+    return await service.search(con, query, filters)
+
+
+@router.post('/test')
+async def test(con: asyncpg.Connection = Depends(get_db_connection)):
+    await crud.search(con, None, None, None)
+
+
+# add preview
     
 
 

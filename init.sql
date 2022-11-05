@@ -1,5 +1,5 @@
 CREATE TYPE role AS ENUM ('moderator', 'marker', 'undefined');
--- CREATE TYPE status AS ENUM ('...');
+CREATE TYPE status AS ENUM ('Новое', 'В работе', 'Завершено', 'На паузе');
 
 
 CREATE TABLE users (
@@ -23,8 +23,22 @@ CREATE TABLE researches (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(), 
     creator_id INT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    -- status status NOT NULL DEFAULT '...',
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    status status DEFAULT 'Новое',
     FOREIGN KEY (creator_id) REFERENCES users (id)
+);
+
+CREATE TABLE tags (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE researches_tags (
+    research_id UUID NOT NULL,
+    tag_id INT NOT NULL,
+    FOREIGN KEY (research_id) REFERENCES researches (id),
+    FOREIGN KEY (tag_id) REFERENCES tags (id)
 );
 
 CREATE TABLE researches_markers (
@@ -34,6 +48,14 @@ CREATE TABLE researches_markers (
     FOREIGN KEY (research_id) REFERENCES researches (id),
     FOREIGN KEY (marker_id) REFERENCES users (id)
 );
+
+INSERT INTO tags (name) 
+VALUES
+    ('Легкие'),
+    ('Рак'),
+    ('COVID-19'),
+    ('Одиночное поражение'),
+    ('Множественные поражения');
 
 INSERT INTO users (login, hashed_password, role, is_superuser, surname, name, patronymic)
 VALUES
@@ -66,4 +88,4 @@ VALUES
     False,
     'Анна',
     'Разметчик №2',
-    'Петровна')
+    'Петровна');
