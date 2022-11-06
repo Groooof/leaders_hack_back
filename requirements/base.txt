@@ -6,3 +6,7 @@ pydicom==2.3.0
 pylibjpeg==1.4.0
 pylibjpeg-libjpeg==1.3.2
 aiofiles==22.1.0
+pandas==1.5.1
+tensorflow==2.10.0
+Keras==2.10.0
+yolo5==0.0.1
