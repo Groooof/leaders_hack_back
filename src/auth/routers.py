@@ -11,7 +11,6 @@ from src.schemas import Error
 from src.auth import utils
 from src import config
 
-
 router = APIRouter(prefix='/api/v1', tags=['auth'])
 
 
@@ -35,7 +34,10 @@ async def login(response: Response, body: sch.UserCredentials, con: asyncpg.Conn
     refresh_token = auth.generate_jwt_refresh()
     await auth.create_refresh_token(con, user.id, refresh_token)
     
-    return sch.JWTTokensResponse(access_token=access_token, refresh_token=refresh_token, expires_in=config.JWT_AT_LIFETIME.seconds, role=user.role)
+    return sch.JWTTokensResponse(access_token=access_token, 
+                                 refresh_token=refresh_token, 
+                                 expires_in=config.JWT_AT_LIFETIME.seconds, 
+                                 role=user.role)
     
 
 @router.post('/logout', response_class=Response)
@@ -69,4 +71,6 @@ async def refresh(response: Response,
     new_refresh_token = auth.generate_jwt_refresh()
     
     await auth.update_refresh_token(con, body.refresh_token, new_refresh_token)
-    return sch.JWTTokensResponse(access_token=new_access_token, refresh_token=new_refresh_token, expires_in=config.JWT_AT_LIFETIME.seconds)
+    return sch.JWTTokensResponse(access_token=new_access_token, 
+                                 refresh_token=new_refresh_token, 
+                                 expires_in=config.JWT_AT_LIFETIME.seconds)

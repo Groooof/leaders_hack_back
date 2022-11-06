@@ -31,11 +31,13 @@ def get_path_to_capture(id, capture_num) -> pathlib.Path:
     
 def get_params():
     types = [_type for _type in sch.Type]
-    localizations = [loc for loc in sch.Localization]
+    lobes = [lobe for lobe in sch.Lobe]
+    lungs = [lung for lung in sch.Lung]
     counts = [count for count in sch.Count]
     sizes = [size for size in sch.SizeMm]
     return sch.GetParamsResponse(type=types,
-                                 localization=localizations,
+                                 lobe=lobes,
+                                 lung=lungs,
                                  count=counts,
                                  size_mm=sizes)
     

@@ -19,7 +19,8 @@ import src.exceptions as exc
 
 router = APIRouter(prefix='/api/v1', tags=['markup'])
 router.responses = {403: {'description': 'Access denied', 'model': Error},
-                    401: {'description': 'Token expired', 'model': Error}}
+                    401: {'description': 'Token expired', 'model': Error},
+                    400: {'description': 'Invalid request data', 'model': Error}}
 
 
 @router.post('/research',

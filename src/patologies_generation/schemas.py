@@ -9,13 +9,15 @@ class Type(str, Enum):
     metastat = 'metastat'
     
     
-class Localization(str, Enum):
-    right_up = 'r_u'
-    right_middle = 'r_m'
-    right_bottom = 'r_b'
-    left_up = 'l_u'
-    left_middle = 'l_m'
-    left_bottom = 'l_b'
+class Lung(str, Enum):
+    right = 'right'
+    left = 'left'
+    
+    
+class Lobe(str, Enum):
+    up = 'up'
+    middle = 'middle'
+    bottom = 'bottom'
     
     
 class Count(str, Enum):
@@ -33,14 +35,16 @@ class SizeMm(str, Enum):
     
 class GenerationParams(pd.BaseModel):
     type: Type
-    localization: Localization
+    lung: Lung
+    lobe: Lobe
     count: Count
     size_mm: SizeMm
 
 
 class GetParamsResponse(pd.BaseModel):
     type: tp.List[Type]
-    localization: tp.List[Localization]
+    lung: tp.List[Lung]
+    lobe: tp.List[Lobe]
     count: tp.List[Count]
     size_mm: tp.List[SizeMm]
 
