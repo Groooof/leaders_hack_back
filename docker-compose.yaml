@@ -5,7 +5,9 @@ volumes:
 
 services:
   app:
-    build: .
+    build:
+      context: /
+      dockerfile: .
     container_name: app
     restart: always
     ports:
@@ -15,7 +17,6 @@ services:
       - pgadmin
     volumes:
       - .:/code
-      - /etc/letsencrypt/live/dr-viewer.online:/code/ssl_keys
     environment:
       - PYTHONPATH=/code
 
