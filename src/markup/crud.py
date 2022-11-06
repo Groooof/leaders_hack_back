@@ -8,6 +8,9 @@ from src.markup import schemas as sch
 
 
 async def create_research(con: asyncpg.Connection, creator_id: int, name: str, description: str, tags: tp.List[str]) -> str:
+    '''
+    Создание записи с информацией об исследовании
+    '''
     query_research = '''
     INSERT INTO researches (creator_id, name, description) VALUES ($1, $2, $3) RETURNING id;
     '''
@@ -25,6 +28,9 @@ async def create_research(con: asyncpg.Connection, creator_id: int, name: str, d
 
 
 async def create_task(con: asyncpg.Connection, research_id: str, user_id: int, deadline: dt.datetime) -> asyncpg.Record:
+    '''
+    Создание задачи
+    '''
     query = '''
     INSERT INTO tasks (research_id, user_id, deadline) VALUES ($1, $2, $3) RETURNING id, created_at, status;
     '''
@@ -32,6 +38,9 @@ async def create_task(con: asyncpg.Connection, research_id: str, user_id: int, d
 
 
 async def have_access_to_research(con: asyncpg.Connection, user_id: int, research_id: tp.Union[str, uuid.UUID]) -> bool:
+    '''
+    Проверка наличия доступа пользователя к исследованию (имеет, если является модератором или имеет задачу по работе с иссл.)
+    '''
     query = '''
     SELECT EXISTS (
         SELECT 1 FROM researches r
@@ -48,6 +57,9 @@ async def have_access_to_research(con: asyncpg.Connection, user_id: int, researc
 
 
 async def get_tags(con: asyncpg.Connection) -> tp.List[str]:
+    '''
+    Получение списка имеющихся тегов
+    '''
     query = '''
     SELECT name FROM tags;
     '''
@@ -56,6 +68,9 @@ async def get_tags(con: asyncpg.Connection) -> tp.List[str]:
 
 
 async def add_tags(con: asyncpg.Connection, tags: tp.List[str]):
+    '''
+    Добавление тега
+    '''
     query = '''
     INSERT INTO tags (name) VALUES ($1) ON CONFLICT DO NOTHING;
     '''
@@ -63,6 +78,9 @@ async def add_tags(con: asyncpg.Connection, tags: tp.List[str]):
 
 
 async def get_markers(con: asyncpg.Connection) -> tp.List[sch.Marker]:
+    '''
+    Получение списка разметчиков
+    '''
     query = '''
     SELECT id, surname, name, patronymic FROM users
     WHERE role = 'marker';
@@ -72,6 +90,9 @@ async def get_markers(con: asyncpg.Connection) -> tp.List[sch.Marker]:
 
 
 async def change_task_status(con: asyncpg.Connection, research_id: str, status: sch.TaskStatus):
+    '''
+    Изменение статуса задачи
+    '''
     query = '''
     UPDATE tasks SET status = $2 WHERE id = $1 RETURNING id;
     '''
@@ -82,6 +103,12 @@ async def search_tasks(con: asyncpg.Connection,
                        research_name: tp.Optional[str], 
                        status: tp.Optional[str], 
                        user_id: tp.Optional[int]):
+    '''
+    Поиск по задачам с фильтрами по:
+    - наименованию исследования
+    - статусу
+    - назначенному пользователю (разметчику)
+    '''
     research_name_filter = '''
     r.name ILIKE '%' || ${} || '%'
     '''
@@ -132,6 +159,9 @@ async def search_tasks(con: asyncpg.Connection,
     
     
 async def search_researches(con: asyncpg.Connection, search_query: tp.Optional[str], tags: tp.Optional[tp.List[str]]):
+    '''
+    Поиск по исследованиям с фильтром по тегам
+    '''
     tags_filter = '''
     ${} <@ (array(SELECT name 
               FROM researches_tags r_t

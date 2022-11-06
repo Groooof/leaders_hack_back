@@ -25,11 +25,12 @@ router = APIRouter(prefix='/api/v1', tags=['auth'])
              response_model=sch.JWTTokensResponse, 
              responses={400: {'description': 'Incorrect login/password', 'model': Error}})
 async def login(response: Response, body: sch.UserCredentials, con: asyncpg.Connection = Depends(get_db_connection)):
-    
     response.headers['Cache-Control'] = 'no-store'
     response.headers['Pragma'] = 'no-cache'
     
+    # проверяем в бд наличие предоставленной комбинации логин/пароль и соответствие логина паролю
     user = await auth.verify_user(con, body.login, body.password)
+    # генерация токенов
     access_token = auth.generate_jwt_access(user.id, user.role, user.is_superuser)
     refresh_token = auth.generate_jwt_refresh()
     await auth.create_refresh_token(con, user.id, refresh_token)
@@ -44,9 +45,11 @@ async def login(response: Response, body: sch.UserCredentials, con: asyncpg.Conn
 async def logout(body: sch.RefreshTokenRequest,
                  access_token: utils.JWTToken = Depends(backends.jwt_auth),
                  con: asyncpg.Connection = Depends(get_db_connection)):
-    
+    # принимаем оба токена, получаем id пользователя
     user_id = access_token.payload.get('sub')
+    # проверяем в бд принадлежит ли refresh token данному пользователю
     await auth.verify_refresh_token(con, user_id, body.refresh_token)
+    # удаляем токен
     await auth.delete_refresh_token(con, body.refresh_token)
 
 
@@ -61,15 +64,16 @@ async def refresh(response: Response,
     response.headers['Cache-Control'] = 'no-store'
     response.headers['Pragma'] = 'no-cache'
     
+    # получае данные о пользователе из токена
     user_id = access_token.payload.get('sub')
     role = access_token.payload.get('role')
     is_superuser = access_token.payload.get('is_superuser')
-    
+    # проверяем в бд принадлежит ли refresh token данному пользователю
     await auth.verify_refresh_token(con, user_id, body.refresh_token)
-    
+    # генерируем новые токены
     new_access_token = auth.generate_jwt_access(user_id, role, is_superuser)
     new_refresh_token = auth.generate_jwt_refresh()
-    
+    # обновляем токен в бд
     await auth.update_refresh_token(con, body.refresh_token, new_refresh_token)
     return sch.JWTTokensResponse(access_token=new_access_token, 
                                  refresh_token=new_refresh_token, 

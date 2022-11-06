@@ -6,6 +6,23 @@ from .crypto import generate_uuid
 
 
 class FileStorage:
+    '''
+    Класс, позволяющий удобно хранить данные в файловой системе.
+    В результате генерируется следующая система файлов:
+    storage
+    |--researches
+       |--af
+       |  |--af3b8...
+       |  |--afc01...
+       |  |--...
+       |   
+       |--04
+       |  |--04f51...
+       |  |--...
+       |   
+       |--bc   
+          |--...
+    '''
     def __init__(self, root_path: pathlib.Path) -> None:
         self._root = root_path
 

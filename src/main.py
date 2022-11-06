@@ -17,8 +17,9 @@ def get_app() -> FastAPI:
     :return: объект FastAPI
     """
     app = FastAPI()
-    app.title = 'ы'
+    app.title = 'Сервис для разметки снимков КТ и искусственной генерации патологий методами ИИ '
     app.description = ''
+    app.version = '1.0.0'
     app.add_exception_handler(RequestValidationError, validation_error_handler)
     app.add_exception_handler(CustomHTTPException, custom_http_exception_handler)
     app.include_router(router=markup_router)
