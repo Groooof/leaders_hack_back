@@ -22,7 +22,7 @@ CREATE TABLE refresh_tokens (
 CREATE TABLE researches (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(), 
     creator_id INT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP NOT NULL DEFAULT (NOW() at time zone 'utc-3'),
     name TEXT NOT NULL,
     description TEXT,
     FOREIGN KEY (creator_id) REFERENCES users (id)
@@ -45,7 +45,7 @@ CREATE TABLE tasks (
     research_id UUID NOT NULL,
     user_id INT NOT NULL,
     deadline TIMESTAMP NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP NOT NULL DEFAULT (NOW() at time zone 'utc-3'),
     status status DEFAULT 'Новое',
     FOREIGN KEY (research_id) REFERENCES researches (id),
     FOREIGN KEY (user_id) REFERENCES users (id)
