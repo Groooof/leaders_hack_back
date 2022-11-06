@@ -10,8 +10,8 @@ from src.utils.dicom import (
     remove_patient_personal_data
 )
 from src.utils.storage import FileStorage
-from .utils import ExtensionsValidators
-from .ct_loaders import (
+from src.utils.other import ExtensionsValidators
+from src.utils.ct_loaders import (
     MarkupLoader,
     AsyncArchiveLoader,
     AsyncDicomListLoader
@@ -51,6 +51,8 @@ class ResearchPathManagerMixin:
         
         captures_path = self.get_captures_path(foldername)
         capture_path = captures_path.joinpath(f'{capture_num}.dcm')
+        if not capture_path.exists():
+            return None
         return capture_path
     
     def get_captures_path(self, foldername: str) -> tp.Optional[pathlib.Path]:

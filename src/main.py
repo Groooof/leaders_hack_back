@@ -5,6 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from src import events
 from src.markup.routers import router as markup_router
 from src.auth.routers import router as auth_router
+from src.patologies_generation.routers import router as generation_router
 from src.exception_handlers import validation_error_handler, custom_http_exception_handler
 from src.exceptions import CustomHTTPException
 from src.utils.openapi import CustomOpenAPIGenerator
@@ -22,6 +23,7 @@ def get_app() -> FastAPI:
     app.add_exception_handler(CustomHTTPException, custom_http_exception_handler)
     app.include_router(router=markup_router)
     app.include_router(router=auth_router)
+    app.include_router(router=generation_router)
     app.add_event_handler('startup', events.on_startup)
     app.add_event_handler('shutdown', events.on_shutdown)
     app.add_middleware(

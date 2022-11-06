@@ -6,7 +6,7 @@ import asyncio
 from fastapi import UploadFile
 
 from src.utils.temp_file import tempfile_context
-from .utils import (
+from src.utils.other import (
     ExtensionsValidators,
     CustomZipFile
 )
