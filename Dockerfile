@@ -1,5 +1,4 @@
 FROM python:3.10.8
-COPY /etc/letsencrypt/live/dr-viewer.online /etc/letsencrypt/live/dr-viewer.online
 WORKDIR /code
 COPY ./requirements /code/requirements
 RUN /usr/local/bin/python -m pip install --upgrade pip
