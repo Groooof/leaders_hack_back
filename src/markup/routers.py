@@ -27,7 +27,7 @@ router.responses = {403: {'description': 'Access denied', 'model': Error},
                            Depends(backends.is_moderator)])
 async def create_research(files: tp.List[UploadFile],
                           name: str = Form(),
-                          description: str = Form(),
+                          description: tp.Optional[str] = Form(default=None),
                           tags: tp.List[str] = Form(default=None), 
                           con: asyncpg.Connection = Depends(get_db_connection),
                           jwt: JWTToken = Depends(backends.get_token)):
@@ -121,10 +121,3 @@ async def search_tasks(body: tp.Optional[sch.SearchTasksRequest] = None,
     if jwt.role == 'marker':
         body.user_id = jwt.id
     return await service.search_tasks(con, body)
-
-
-@router.post('/test')
-async def test(con: asyncpg.Connection = Depends(get_db_connection)):
-    await crud.search(con, None, None, None)
-
-

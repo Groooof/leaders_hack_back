@@ -24,7 +24,7 @@ CREATE TABLE researches (
     creator_id INT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     name TEXT NOT NULL,
-    description TEXT NOT NULL,
+    description TEXT,
     FOREIGN KEY (creator_id) REFERENCES users (id)
 );
 
