@@ -5,9 +5,7 @@ volumes:
 
 services:
   app:
-    build:
-      context: /
-      dockerfile: .
+    build: .
     container_name: app
     restart: always
     ports:
