@@ -11,7 +11,6 @@ from src.auth.utils import JWTToken
 from src.dependencies import get_db_connection
 from src.schemas import Error
 from src.markup.utils import ResearchesStorage
-from src.markup.crud import crud
 from src.markup import service
 import src.markup.schemas as sch
 import src.exceptions as exc
