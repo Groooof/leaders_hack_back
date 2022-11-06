@@ -103,3 +103,11 @@ class CreateTaskRequest(pd.BaseModel):
     user_id: int
     deadline: dt.datetime
     
+    class Config:
+        schema_extra = {
+            'example': {
+                'research_id': '80def856-247c-4426-9db9-319c45f054c8',
+                'user_id': 3,
+                'deadline': '2022-12-12T00:00:00'
+            }
+        }
