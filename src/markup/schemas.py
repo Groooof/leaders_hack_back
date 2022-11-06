@@ -27,7 +27,7 @@ class Marker(pd.BaseModel):
 class Research(pd.BaseModel):
     id: tp.Union[str, uuid.UUID]
     name: str
-    description: str
+    description: tp.Optional[str]
     tasks_count: int
     tags: tp.List[str]
 
