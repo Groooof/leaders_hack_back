@@ -30,18 +30,8 @@ class JWTEnv(BaseEnv):
         env_prefix = 'JWT_'
     
 
-class CeleryEnv(BaseEnv):
-    BROKER_URL: str
-    RESULT_BACKEND: str
-    
-    class Config:
-        env_prefix = 'CELERY_'
-    
-
-
 postgres_env = PostgresEnv()
 jwt_env = JWTEnv()
-celery_env = CeleryEnv()
 JWT_AT_LIFETIME = dt.timedelta(minutes=59)
 JWT_RT_LIFETIME = dt.timedelta(days=7)
 JWT_AT_TYPE = 'bearer'

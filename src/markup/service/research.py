@@ -1,14 +1,15 @@
+import datetime as dt
 import typing as tp
 import pathlib
 
 import asyncpg
 from fastapi import UploadFile
 
+from src import exceptions as exc
 from src import config
 from src.markup import crud
 from src.markup import utils
 from src.markup import schemas as sch   
-from src import exceptions as exc
 
 
 async def create_research(con: asyncpg.Connection, creator_id: str, name: str, description: str, tags: tp.List[str]) -> str:
@@ -16,6 +17,13 @@ async def create_research(con: asyncpg.Connection, creator_id: str, name: str, d
     storage = utils.ResearchesStorage(config.RESEARCHES_PATH)
     storage.create_empty_research(research_id)
     return research_id
+
+
+async def create_task(con: asyncpg.Connection, research_id: str, user_id: int, deadline: dt.datetime):
+    res = await crud.create_task(con, research_id, user_id, deadline)
+    return sch.CreateTaskResponse(id=res['id'],
+                                  created_at=res['created_at'],
+                                  status=res['status'])
 
 
 async def load_captures(research_id: str, files: tp.List[UploadFile]) -> int:
@@ -79,26 +87,31 @@ async def add_tags(con: asyncpg.Connection, tags: tp.List[str]) -> None:
     await crud.add_tags(con, tags)
 
 
-async def change_research_status(con: asyncpg.Connection, research_id: str, status: sch.ResearchStatus) -> None:
-    await crud.change_research_status(con, research_id, status)
+async def change_task_status(con: asyncpg.Connection, task_id: str, status: sch.TaskStatus) -> None:
+    await crud.change_task_status(con, task_id, status)
 
 
-async def search(con: asyncpg.Connection, query: tp.Optional[str], filters: sch.SearchFilters) -> sch.SearchResponse:
-    tags = filters.tags if filters is not None else None
-    marker = filters.marker if filters is not None else None
-    search_result = await crud.search(con, query, tags, marker)
+async def search_researches(con: asyncpg.Connection, body: tp.Optional[sch.SearchResearchesRequest]) -> sch.SearchResearchesResponse:
+    query, tags = (None, None) if body is None else (body.query, body.tags)
+    search_result = await crud.search_researches(con, query, tags)
 
-    response = sch.SearchResponse()
+    response = sch.SearchResearchesResponse()
     for row in search_result:
-        marker = sch.Marker(id=row['marker_id'],
-                            name=row['marker_name'],
-                            surname=row['marker_surname'],
-                            patronymic=row['marker_patronymic']) if row['marker_id'] is not None else None
-        research = sch.Research(id=str(row['research_id']),
-                                name=row['research_name'],
-                                description=row['research_description'],
-                                status=row['research_status'],
-                                tags=row['research_tags'],
-                                marker=marker)
+        research = sch.Research.parse_obj(row)
         response.researches.append(research)
     return response
+
+
+async def search_tasks(con: asyncpg.Connection, body: sch.SearchTasksRequest) -> sch.SearchTaskResponse:
+    research_name, status, deadline, created_at, user_id = (None, None, None, None, None) \
+                                                            if body is None else \
+                                                            (body.research_name, body.status, body.deadline, body.created_at, body.user_id)
+    search_result = await crud.search_tasks(con, research_name, status, user_id)
+    response = sch.SearchTaskResponse()
+    for row in search_result:
+        task = sch.Task.parse_obj(row)
+        response.tasks.append(task)
+    return response
+    
+                                                   
+                                                   

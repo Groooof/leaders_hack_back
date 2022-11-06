@@ -88,34 +88,43 @@ async def add_tags(body: sch.AddTagsRequest, con: asyncpg.Connection = Depends(g
     await service.add_tags(con, body.tags)
 
 
-@router.post('research/{research_id}/status', dependencies=[Depends(backends.jwt_auth)])
-async def change_research_status(research_id: str,
-                           body: sch.ChangeResearchStatusRequest,
-                           con: asyncpg.Connection = Depends(get_db_connection),
-                           jwt: JWTToken = Depends(backends.get_token)):
+@router.post('/research/{task_id}/status', dependencies=[Depends(backends.jwt_auth),
+                                                        Depends(backends.is_moderator)])
+async def change_task_status(task_id: int,
+                             body: sch.ChangeTaskStatusRequest,
+                             con: asyncpg.Connection = Depends(get_db_connection),
+                             jwt: JWTToken = Depends(backends.get_token)):
     
-    await service.check_access_to_research(con, jwt.user, research_id)
-    await service.change_research_status(con, research_id, body.status)
+    # await service.check_access_to_research(con, jwt.user, research_id)
+    await service.change_task_status(con, task_id, body.status)
 
 
-@router.post('/research/search', dependencies=[Depends(backends.jwt_auth)])
-async def search(body: tp.Optional[sch.SearchRequest] = None, 
+@router.post('/task', dependencies=[Depends(backends.jwt_auth),
+                                    Depends(backends.is_moderator)])
+async def create_task(body: sch.CreateTaskRequest, con: asyncpg.Connection = Depends(get_db_connection)):
+    return await service.create_task(con, body.research_id, body.user_id, body.deadline)
+
+
+@router.post('/research/search', dependencies=[Depends(backends.jwt_auth),
+                                               Depends(backends.is_moderator)])
+async def search_researches(body: tp.Optional[sch.SearchResearchesRequest] = None, 
                  con: asyncpg.Connection = Depends(get_db_connection),
                  jwt: JWTToken = Depends(backends.get_token)):
+    return await service.search_researches(con, body)
+
+
+@router.post('/tasks/search', dependencies=[Depends(backends.jwt_auth)])
+async def search_tasks(body: tp.Optional[sch.SearchTasksRequest] = None, 
+                       con: asyncpg.Connection = Depends(get_db_connection),
+                       jwt: JWTToken = Depends(backends.get_token)):
         
-    query = body.query if body is not None else None
-    filters = body.filters if body is not None else None
     if jwt.role == 'marker':
-        filters = sch.SearchFilters(marker=jwt.user, tags=filters.tags if filters else None)
-    return await service.search(con, query, filters)
+        body.user_id = jwt.id
+    return await service.search_tasks(con, body)
 
 
 @router.post('/test')
 async def test(con: asyncpg.Connection = Depends(get_db_connection)):
     await crud.search(con, None, None, None)
-
-
-# add preview
-    
 
 

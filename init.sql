@@ -25,7 +25,6 @@ CREATE TABLE researches (
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     name TEXT NOT NULL,
     description TEXT NOT NULL,
-    status status DEFAULT 'Новое',
     FOREIGN KEY (creator_id) REFERENCES users (id)
 );
 
@@ -41,12 +40,15 @@ CREATE TABLE researches_tags (
     FOREIGN KEY (tag_id) REFERENCES tags (id)
 );
 
-CREATE TABLE researches_markers (
+CREATE TABLE tasks (
     id SERIAL PRIMARY KEY,
     research_id UUID NOT NULL,
-    marker_id INT NOT NULL,
+    user_id INT NOT NULL,
+    deadline TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    status status DEFAULT 'Новое',
     FOREIGN KEY (research_id) REFERENCES researches (id),
-    FOREIGN KEY (marker_id) REFERENCES users (id)
+    FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
 INSERT INTO tags (name) 
