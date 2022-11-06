@@ -7,4 +7,4 @@ RUN pip install --no-cache-dir -r requirements/base.txt
 COPY . /code
 RUN useradd -ms /bin/bash purplemice
 USER purplemice
-ENTRYPOINT ["uvicorn", "src.main:app", "--reload", "--host", "0.0.0.0", "--port", "443", "--ssl-keyfile", "./privkey.pem", "--ssl-certfile", "./fullchain.pem"]
+ENTRYPOINT ["uvicorn", "src.main:app", "--reload", "--host", "0.0.0.0", "--port", "443", "--ssl-keyfile", "./ssl_keys/privkey.pem", "--ssl-certfile", "./ssl_keys/fullchain.pem"]
