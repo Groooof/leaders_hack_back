@@ -21,7 +21,7 @@ async def load(files: tp.List[UploadFile]):
     return sch.LoadResponse(loaded=loaded, id=foldername)
 
 
-@router.get('/generation/{id}/captures/{capture_num}', dependencies=[Depends(backends.jwt_auth)])
+@router.get('/generation/{id}/captures/{capture_num}')#, dependencies=[Depends(backends.jwt_auth)])
 async def get_capture(id: str, capture_num: int):
     
     path = service.get_path_to_capture(id, capture_num)
