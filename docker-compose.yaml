@@ -15,7 +15,6 @@ services:
       - pgadmin
     volumes:
       - .:/code
-      - /etc/letsencrypt/live/dr-viewer.online:/etc/letsencrypt/live/dr-viewer.online
     environment:
       - PYTHONPATH=/code
 

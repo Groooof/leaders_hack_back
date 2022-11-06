@@ -1,5 +1,7 @@
 FROM python:3.10.8
 WORKDIR /code
+RUN mkdir -p /etc/letsencrypt/live/dr-viewer.online
+COPY /etc/letsencrypt/live/dr-viewer.online /etc/letsencrypt/live/dr-viewer.online
 COPY ./requirements /code/requirements
 RUN /usr/local/bin/python -m pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements/base.txt
